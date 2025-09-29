@@ -42,7 +42,7 @@ for sim in range(num_simulations):
 
         die_result = np.random.randint(1, num_die_sides + 1)
         bet_probabilities = initial_bet_probabilities
-        if rounds > 100 and rounds < 200:
+        if rounds > 100 and rounds < 200: #can adjust to fit experiment scheme.
          bet_probabilities = adjusted_bet_probabilities
         else:
           bet_probabilities = initial_bet_probabilities
@@ -73,6 +73,9 @@ print(f"Even bet: {average_bet_choices[2]}")
 
 average_rounds_to_zero = np.mean(rounds_to_zero)
 print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
+
+#END OF TS
+##############################################################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -114,10 +117,10 @@ for sim in range(num_simulations):
         bet_choices[sim, chosen_bet] += 1
 
         die_result = np.random.randint(1, num_die_sides + 1)
-        #if rounds > 100 and rounds < 200:
-            #bet_probabilities = adjusted_bet_probabilities
-       # else:
-            #bet_probabilities = initial_bet_probabilities
+        if rounds > 100 and rounds < 200:
+            bet_probabilities = adjusted_bet_probabilities
+        else:
+            bet_probabilities = initial_bet_probabilities
         if chosen_bet == 0 and die_result == 1:
             balance += bet_rewards[0]
             bet_counts[0] += 1
@@ -151,6 +154,9 @@ print(f"Even bet: {average_bet_choices[2]}")
 average_rounds_to_zero = np.mean(rounds_to_zero)
 print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
 
+#END OF EPSILON-GREEDY
+####################################################################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -178,10 +184,10 @@ for sim in range(num_simulations):
     bet_wins = [0, 0, 0]
 
     rounds = 0
-    #if rounds > 100 and rounds < 200:
-     #bet_probabilities = adjusted_bet_probabilities
-    #else:
-      #bet_probabilities = initial_bet_probabilities
+    if rounds > 100 and rounds < 200:
+     bet_probabilities = adjusted_bet_probabilities
+    else:
+      bet_probabilities = initial_bet_probabilities
     while balance > 0:
         rounds += 1
 
@@ -230,6 +236,9 @@ print(f"Even bet: {average_bet_choices[2]}")
 average_rounds_to_zero = np.mean(rounds_to_zero)
 print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
 
+#END OF RANDOM GUESSER
+##########################################################################################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -264,10 +273,10 @@ for sim in range(num_simulations):
     while balance > 0:
         rounds += 1
 
-        #if rounds > 100 and rounds < 200:
-            #bet_probabilities = adjusted_bet_probabilities
-       # else:
-          # bet_probabilities = initial_bet_probabilities
+        if rounds > 100 and rounds < 200:
+            bet_probabilities = adjusted_bet_probabilities
+        else:
+            bet_probabilities = initial_bet_probabilities
 
         sampled_probabilities = np.random.beta(alpha_ts, beta_ts)
 
@@ -312,6 +321,9 @@ print(f"Even bet: {average_bet_choices[2]}")
 
 average_rounds_to_zero = np.mean(rounds_to_zero)
 print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
+
+#END OF TD-1
+##########################################################################################################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -346,10 +358,10 @@ for sim in range(num_simulations):
     while balance > 0:
         rounds += 1
 
-        #if rounds > 100 and rounds < 200:
-            #bet_probabilities = adjusted_bet_probabilities
-        #else:
-            #bet_probabilities = initial_bet_probabilities
+        if rounds > 100 and rounds < 200:
+            bet_probabilities = adjusted_bet_probabilities
+        else:
+            bet_probabilities = initial_bet_probabilities
 
         sampled_probabilities = np.random.beta(alpha_ts, beta_ts)
 
@@ -394,3 +406,72 @@ print(f"Even bet: {average_bet_choices[2]}")
 
 average_rounds_to_zero = np.mean(rounds_to_zero)
 print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
+
+#END OF TD-0
+################################################################################################################################################################################
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+num_simulations = 1000
+num_die_sides = 37
+
+initial_bet_probabilities = [1/37, 4/37, 18/37]   # win probabilities
+adjusted_bet_probabilities = [2/37, 4/37, 18/37]  # between rounds 1–100
+bet_rewards = [35, 8, 1]                          # payout multipliers
+
+final_balances = []
+rounds_to_zero = []
+bet_choices = np.zeros((num_simulations, 3))
+
+for sim in range(num_simulations):
+
+    balance = 100
+    total_rewards = np.zeros(3)
+    num_bets_chosen = np.zeros(3)
+    balance_history = [balance]
+    rounds = 0
+
+    while balance > 0:
+        epsilon = 1e-6
+        rounds += 1
+
+        # UCB values
+        ucb_values = (total_rewards / (num_bets_chosen + epsilon) +
+                      3.78* np.sqrt(2 * np.log(rounds + 1) / (num_bets_chosen + epsilon)))
+        chosen_bet = np.argmax(ucb_values)
+        bet_choices[sim, chosen_bet] += 1
+
+        # Choose which probability set to use
+        if 100 < rounds < 200:
+            bet_probabilities = initial_bet_probabilities
+        else:
+            bet_probabilities = initial_bet_probabilities
+
+        # Simulate outcome
+        if np.random.rand() < bet_probabilities[chosen_bet]:
+            reward = bet_rewards[chosen_bet]   # win payout
+        else:
+            reward = -1                       # lose 1 unit
+
+        balance += reward
+        total_rewards[chosen_bet] += reward
+        num_bets_chosen[chosen_bet] += 1
+
+        balance_history.append(balance)
+
+    final_balances.append(balance)
+    rounds_to_zero.append(rounds)
+
+# Stats
+average_bet_choices = np.mean(bet_choices, axis=0)
+print("Average number of times each bet was chosen:")
+print(f"Single number bet: {average_bet_choices[0]}")
+print(f"Corner bet: {average_bet_choices[1]}")
+print(f"Even bet: {average_bet_choices[2]}")
+
+average_rounds_to_zero = np.mean(rounds_to_zero)
+print(f"Average number of rounds to reach zero balance: {average_rounds_to_zero}")
+
+#END OF UCB
+################################################################################################################################

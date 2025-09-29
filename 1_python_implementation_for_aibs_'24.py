@@ -72,6 +72,9 @@ print(f"Single number bet: {average_bet_choices[0]}")
 print(f"Corner bet: {average_bet_choices[1]}")
 print(f"Even bet: {average_bet_choices[2]}")
 
+#END OF TS
+#####################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -149,6 +152,9 @@ print(f"Single number bet: {average_bet_choices[0]}")
 print(f"Corner bet: {average_bet_choices[1]}")
 print(f"Even bet: {average_bet_choices[2]}")
 
+#END OF EPSILON-GREEDY
+##########################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -223,6 +229,9 @@ print("Average number of times each bet was chosen:")
 print(f"Single number bet: {average_bet_choices[0]}")
 print(f"Corner bet: {average_bet_choices[1]}")
 print(f"Even bet: {average_bet_choices[2]}")
+
+#END OF RANDOM GUESSER
+##############################################################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -305,6 +314,9 @@ print(f"Single number bet: {average_bet_choices[0]}")
 print(f"Corner bet: {average_bet_choices[1]}")
 print(f"Even bet: {average_bet_choices[2]}")
 
+#END OF TD-0
+##########################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -385,3 +397,76 @@ print("Average number of times each bet was chosen:")
 print(f"Single number bet: {average_bet_choices[0]}")
 print(f"Corner bet: {average_bet_choices[1]}")
 print(f"Even bet: {average_bet_choices[2]}")
+
+#END OF TD-1
+######################################################################################################################################################
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+num_simulations = 10000
+num_rounds = 500  # change as necessary
+num_die_sides = 37
+balances_above_100 = 0
+
+initial_bet_probabilities = [1/37, 4/37, 18/37]
+adjusted_bet_probabilities = [2/37, 4/37, 18/37]
+bet_rewards = [35, 8, 1]
+
+final_balances = []
+bet_choices = np.zeros((num_simulations, 3))
+
+epsilon = 1e-6  # small constant to prevent division by zero
+
+for sim in range(num_simulations):
+    balance = 100
+    total_rewards = np.zeros(3)
+    num_bets_chosen = np.zeros(3)
+    balance_history = [balance]
+
+    for round in range(num_rounds):
+        if balance <= 0:
+          break
+        #if 400 < round < 500:
+            #bet_probabilities = adjusted_bet_probabilities
+        #else:
+        bet_probabilities = initial_bet_probabilities
+
+        # Calculate UCB for each bet (no "first 3 rounds" rule now)
+        ucb_values = (total_rewards / (num_bets_chosen + epsilon) +
+                      3.78* np.sqrt(2 * np.log(round + 1 + epsilon) / (num_bets_chosen + epsilon)))
+        chosen_bet = np.argmax(ucb_values)
+
+        bet_choices[sim, chosen_bet] += 1
+
+        # Roll the die
+        die_result = np.random.randint(1, num_die_sides + 1)
+
+        # Calculate the outcome of the bet
+        if chosen_bet == 0 and die_result == 1:
+            reward = bet_rewards[0]
+        elif chosen_bet == 1 and die_result in (1, 2, 6, 7):
+            reward = bet_rewards[1]
+        elif chosen_bet == 2 and die_result % 2 == 0:
+            reward = bet_rewards[2]
+        else:
+            reward = -1
+
+        balance += reward
+        total_rewards[chosen_bet] += max(0, reward)  # Add only positive rewards for UCB calculation
+        num_bets_chosen[chosen_bet] += 1
+
+        balance_history.append(balance)
+
+    final_balances.append(balance)
+    if balance > 100:
+        balances_above_100 += 1
+
+# Calculate statistics
+average_final_balances = np.mean(final_balances)
+
+print(f"Average Final Balance Over {num_simulations} Simulations: ${average_final_balances}")
+print(f"Frequency of Balances Above $100: {balances_above_100} out of {num_simulations} simulations")
+
+#END OF UCB
+####################################################################################################################################
